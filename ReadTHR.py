@@ -9,10 +9,11 @@ import math
 import sys
 import pickle
 import os.path
+import pdb
 
 sRainStart = 'May 26, 2017'
 
-os.chdir('/home/pi/Devel/tmonitor')
+# os.chdir('/home/pi/Devel/tmonitor')
 # Global variables
 strURL40 = 'http://192.168.0.40:8484/data'
 strURL41 = 'http://192.168.0.41:8484/data'
@@ -357,11 +358,18 @@ sprefix = """<!DOCTYPE HTML>
 <html>
 <head>
 <title>T RH data R</title>
-</Head>
-<font size='6'>{{ date }}(%s) </font>&nbsp;&nbsp;
-<font size='16'> <a HREF="../thrplot">Plot</a> </font>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+</head>
+<nav class="navbar navbar-dark bg-dark">
+  <a class="navbar-brand" href="#">Temperature Dashboard: %s</a>
+</nav>
+<br>
+<div class="container-fluid">
 """
 spostfix = """
+    </tbody>
+  </table>
+</div>
 </html>
 """
 
@@ -372,24 +380,26 @@ stemphumid = """
 """
 
 smmline = """
-<br>
-<font size='16'>Max</font>&nbsp;
-<font size='16' color='red'>%s&deg;</font>&nbsp;
-<font size='16' color='blue'><b>%s</b>:</font>&nbsp;
-<font size='16'>Min</font>&nbsp;
-<font size='16' color='red'>%s&deg;</font>
-<font size='16' color='blue'><b>%s</b>:</font>
+<tr>
+    <td>%s</td>
+    <td>%s&deg (%s)</td>
+    <td>%s&deg (%s)</td>
+    <td>%s</td>
+</tr>
 """
 
-def MMStrToHTML(sMM):
+def MMStrToHTML(sMM, date=''):
     sMM +='}'
     res = re.findall('Tx=(.*?) @ (.*?), Tm=(.*?) @ (.*?)}', sMM)
     if len(res) == 0:
         return ''
     if len(res[0]) < 4:
         return ''
-    (stx, sdx, stm, sdm) = res[0]
-    stext = smmline % res[0]
+    (stx, sdx, stm, last) = res[0]
+    rainHack = last.split(' Rain ')
+    sdm = rainHack[0] 
+    rain = rainHack[1] if len(rainHack) > 1 else 0
+    stext = smmline % (date, stx, sdx, stm, sdm, rain)
     return stext
 
 def MMfromFile(id):
@@ -413,41 +423,74 @@ def MMfromFile(id):
                 sline = splitstr[ii]
                 res = re.findall('.*?{(.*?})', sline)
                 # include MMM DD
-                stemp += "<br><font size='6'>%s:</font>" % sline[0:6]
+                # stemp += "<br><font size='6'>%s:</font>" % sline[0:6]
+                date = sline[0:6]
                 for sMM in res:
                     if s_id == sMM[0:2]:
-                        stemp += MMStrToHTML(sMM)
+                        stemp += MMStrToHTML(sMM, date)
             return stemp
     except:
         return stemp
-            
+
+infoCardStart = """
+<div class="col-6 col-sm-4 placeholder">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="card-title">%s</h4>
+      </div>
+      <div class="card-body">
+        <h1 class="card-subtitle mb-2 text-muted">%.1f&deg;</h1>
+        <p>Relative Humidity: %.1f%%</p>
+        <p>Dew Point: %.1f&deg;</p>
+"""
+
+infoCardEnd = """
+      </div>
+    </div>
+  </div>
+"""
+
 def writehtml():
-    shtml =  sprefix % ('THR ' + datetime.now().strftime('%I:%M:%S %p'))
+    shtml =  sprefix % (datetime.now().strftime('%I:%M:%S %p'))
+    shtml += """<section class="row text-center placeholders">"""
     for asensor in allsensors:
         tdewf = TdewF(asensor.temp, asensor.humid)
-        temphtml = stemphumid % (asensor.sname, asensor.temp, asensor.humid, tdewf)
+        temphtml = infoCardStart % (asensor.sname, asensor.temp, asensor.humid, tdewf)
         # add Pressure if non-zero
         if (asensor.fpress != 0.0):
-            sPress = "&nbsp;<font size='16' color='blue'>P=%.2f</font>" % (asensor.fpress)
+            sPress = "<p>Pressure: %.2f&deg;</p>" % (asensor.fpress)
             temphtml += sPress
         # add rain if non-zero
         if (asensor.mm.rainTotal > 0):
             dayRain = asensor.mm.rainTotal - asensor.mm.rainDayStart
             sRain = \
-            "<br>&nbsp;&nbsp;<font size='16' color='blue'>Day Rain %.0f (Total %.0f since %s)</font>"\
+            "<p>Rain: %.0f today<br><weak>(Total %.0f since %s)</weak></p>"\
             % (dayRain, asensor.mm.rainTotal, sRainStart)
             temphtml += sRain
-        shtml += temphtml
         if (asensor.mm.dark > 0):
             # print('dark = ' + str(asensor.mm.dark))
-            sDark = "<br>&nbsp;&nbsp;<font size='16' color='blue'>dark %.0f</font>" % asensor.mm.dark
-            shtml += sDark
+            sDark = "<p>Dark: %.0f</>" % asensor.mm.dark
+            temphtml += sDark
+        shtml += temphtml + infoCardEnd
+
+    # End card section
+    shtml += "</section><br>"
 
     # Add max, min values
-    sName = "<br><font size='6'>Max Min </font><font size='6' color='blue'>%s:&nbsp;&nbsp</font>" % allsensors[0].sname
-    sDate = "<font size='6'>%s:</font>" % datetime.now().strftime('%b %d')
-    sMM = allsensors[0].mm.toStr()
-    shtml += sName + sDate + MMStrToHTML(sMM)
+    tableHeader = """<h2>History</h2>
+<div class="table-responsive">
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Max</th>
+        <th>Min</th>
+        <th>Rain</th>
+      </tr>
+    </thead>
+    <tbody>
+    """
+    shtml += tableHeader
 
     shtml += MMfromFile(allsensors[0].id)
 
