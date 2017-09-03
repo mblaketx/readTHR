@@ -439,9 +439,9 @@ infoCardStart = """
         <h4 class="card-title">%s</h4>
       </div>
       <div class="card-body">
-        <h1 class="card-subtitle mb-2 text-muted">%.1f&deg;</h1>
-        <p>Relative Humidity: %.1f%%</p>
-        <p>Dew Point: %.1f&deg;</p>
+        <h1 class="card-subtitle mb-2">%.1f&deg;</h1>
+        <h5 class="text-muted">Relative Humidity: %.1f%%</h5>
+        <h5 class='text-muted'>Dew Point: %.1f&deg;</h5>
 """
 
 infoCardEnd = """
@@ -458,18 +458,18 @@ def writehtml():
         temphtml = infoCardStart % (asensor.sname, asensor.temp, asensor.humid, tdewf)
         # add Pressure if non-zero
         if (asensor.fpress != 0.0):
-            sPress = "<p>Pressure: %.2f&deg;</p>" % (asensor.fpress)
+            sPress = "<h5 class='text-muted'>Pressure: %.2f&deg;</h5>" % (asensor.fpress)
             temphtml += sPress
         # add rain if non-zero
         if (asensor.mm.rainTotal > 0):
             dayRain = asensor.mm.rainTotal - asensor.mm.rainDayStart
             sRain = \
-            "<p>Rain: %.0f today<br><weak>(Total %.0f since %s)</weak></p>"\
+            "<h5 class='text-muted'>Rain: %.0f today<br><weak>(Total %.0f since %s)</weak></h5>"\
             % (dayRain, asensor.mm.rainTotal, sRainStart)
             temphtml += sRain
         if (asensor.mm.dark > 0):
             # print('dark = ' + str(asensor.mm.dark))
-            sDark = "<p>Dark: %.0f</>" % asensor.mm.dark
+            sDark = "<h5 class='text-muted'>Dark: %.0f<h5/>" % asensor.mm.dark
             temphtml += sDark
         shtml += temphtml + infoCardEnd
 
@@ -479,7 +479,7 @@ def writehtml():
     # Add max, min values
     tableHeader = """<h2>History</h2>
 <div class="table-responsive">
-  <table class="table table-striped">
+  <table class="table table-striped" style="font-size: x-large;">
     <thead>
       <tr>
         <th>Date</th>
