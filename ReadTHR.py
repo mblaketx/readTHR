@@ -362,6 +362,9 @@ sprefix = """<!DOCTYPE HTML>
 </head>
 <nav class="navbar navbar-dark bg-dark">
   <a class="navbar-brand" href="#">Temperature Dashboard: %s</a>
+  <form class="form-inline">
+    <a class="btn btn-outline-primary align-right" href="../thrplot">Plot</a>
+  </form>
 </nav>
 <br>
 <div class="container-fluid">
