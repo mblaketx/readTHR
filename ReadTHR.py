@@ -385,8 +385,8 @@ stemphumid = """
 smmline = """
 <tr>
     <td>%s</td>
-    <td>%s&deg (%s)</td>
-    <td>%s&deg (%s)</td>
+    <td><font size='16' color='green'>%s&deg </font>(%s)</td>
+    <td><font size='16' color='red'>%s&deg </font>(%s)</td>
     <td>%s</td>
 </tr>
 """
@@ -436,7 +436,7 @@ def MMfromFile(id):
         return stemp
 
 infoCardStart = """
-<div class="col-6 col-sm-4 placeholder">
+<div style="font-size: x-large;" class="col-6 col-sm-4 placeholder">
     <div class="card">
       <div class="card-header">
         <h4 class="card-title">%s</h4>
@@ -482,7 +482,7 @@ def writehtml():
     # Add max, min values
     tableHeader = """<h2>History</h2>
 <div class="table-responsive">
-  <table class="table table-striped" style="font-size: x-large;">
+  <table class="table table-striped" style="font-size: xx-large;">
     <thead>
       <tr>
         <th>Date</th>
