@@ -377,16 +377,16 @@ spostfix = """
 """
 
 stemphumid = """
-<br><font size='16' color='blue'><b>%s</b>:</font>&nbsp;&nbsp;<font size='16' color='red'>%.1f&deg;</font>&nbsp;&nbsp;
-<font size='16' color='green'>%.1f%% rh</font>&nbsp;&nbsp;
+<br><font size='16' color='#CC6058'><b>%s</b>:</font>&nbsp;&nbsp;<font size='16' color='red'>%.1f&deg;</font>&nbsp;&nbsp;
+<font size='16' color='#145699'>%.1f%% rh</font>&nbsp;&nbsp;
 <font size='16' color='black'>dp=%.1f&deg;</font><font size='14' color='black'>
 """
 
 smmline = """
 <tr>
     <td>%s</td>
-    <td><font size='16' color='green'>%s&deg </font>(%s)</td>
-    <td><font size='16' color='red'>%s&deg </font>(%s)</td>
+    <td><font size='16' color='#ff4444'>%s&deg </font>(%s)</td>
+    <td><font size='16' color='#4285F4'>%s&deg </font>(%s)</td>
     <td>%s</td>
 </tr>
 """
@@ -437,9 +437,9 @@ def MMfromFile(id):
 
 infoCardStart = """
 <div style="font-size: x-large;" class="col-6 col-sm-4 placeholder">
-    <div class="card">
-      <div class="card-header">
-        <h4 class="card-title">%s</h4>
+    <div style="border-color:%s" class="card">
+      <div style="background-color:%s" class="card-header">
+        <h4 class="card-title text-white">%s</h4>
       </div>
       <div class="card-body">
         <h1 class="card-subtitle mb-2">%.1f&deg;</h1>
@@ -456,9 +456,11 @@ infoCardEnd = """
 def writehtml():
     shtml =  sprefix % (datetime.now().strftime('%I:%M:%S %p'))
     shtml += """<section class="row text-center placeholders">"""
-    for asensor in allsensors:
+    colors = ['#ff4444', '#aa66cc', '#4285F4', 'rgba(0,0,0,.03)']
+    for i, asensor in enumerate(allsensors):
         tdewf = TdewF(asensor.temp, asensor.humid)
-        temphtml = infoCardStart % (asensor.sname, asensor.temp, asensor.humid, tdewf)
+        color = colors[min(i, len(colors) - 1)]
+        temphtml = infoCardStart % (color, color, asensor.sname, asensor.temp, asensor.humid, tdewf)
         # add Pressure if non-zero
         if (asensor.fpress != 0.0):
             sPress = "<h5 class='text-muted'>Pressure: %.2f&deg;</h5>" % (asensor.fpress)
